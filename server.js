@@ -6,10 +6,11 @@ var app         = express();
 var bodyParser  = require('body-parser');
 var morgan      = require('morgan');
 var mongoose    = require('mongoose');
+var stormpath 	= require('express-stormpath');
 
-var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
-var config = require('./config'); // get our config file
-var User   = require('./app/models/user'); // get our mongoose model
+var jwt    		= require('jsonwebtoken'); // used to create, sign, and verify tokens
+var config 		= require('./config'); // get our config file
+//var User   		= require('./app/models/user'); // get our mongoose model
     
 // =======================
 // configuration =========
@@ -38,6 +39,11 @@ app.get('/', function(req, res) {
 
 // get an instance of the router for api routes
 var apiRoutes = express.Router(); 
+
+// STORMPATH Middlewear must be the last initialized middlewear
+app.use(stormpath.init(app, {
+  website: true
+}));
 
 // route to authenticate a user (POST http://localhost:8080/api/authenticate)
 apiRoutes.post('/authenticate', function(req, res) {
@@ -75,38 +81,6 @@ apiRoutes.post('/authenticate', function(req, res) {
     }
 
   });
-});
-
-// route middleware to verify a token -- It ONLY VERIFIES WHAT'S BELOW
-apiRoutes.use(function(req, res, next) {
-
-  // check header or url parameters or post parameters for token
-  var token = req.body.token || req.query.token || req.headers['x-access-token'];
-
-  // decode token
-  if (token) {
-
-    // verifies secret and checks exp
-    jwt.verify(token, app.get('superSecret'), function(err, decoded) {      
-      if (err) {
-        return res.json({ success: false, message: 'Failed to authenticate token.' });    
-      } else {
-        // if everything is good, save to request for use in other routes
-        req.decoded = decoded;    
-        next();
-      }
-    });
-
-  } else {
-
-    // if there is no token
-    // return an error
-    return res.status(403).send({ 
-        success: false, 
-        message: 'No token provided.' 
-    });
-    
-  }
 });
 
 // route to show a random message (GET http://localhost:8080/api/)
