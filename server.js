@@ -10,6 +10,8 @@ var mongoose    = require('mongoose');
 var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
 var config = require('./config'); // get our config file
 var User   = require('./app/models/user'); // get our mongoose model
+
+var wwwhisper = require('connect-wwwhisper');
     
 // =======================
 // configuration =========
@@ -35,24 +37,6 @@ app.get('/', function(req, res) {
 });
 
 // API ROUTES -------------------
-
-app.get('/setup', function(req, res) {
-
-  // create a sample user
-  var nick = new User({ 
-    name: 'Nick Cerminara', 
-    password: 'password',
-    admin: true 
-  });
-
-  // save the sample user
-  nick.save(function(err) {
-    if (err) throw err;
-
-    console.log('User '+nick.name+' saved successfully');
-    res.json({ success: true });
-  });
-});
 
 // get an instance of the router for api routes
 var apiRoutes = express.Router(); 
@@ -94,6 +78,8 @@ apiRoutes.post('/authenticate', function(req, res) {
 
   });
 });
+
+app.use(wwwhisper());
 
 // route middleware to verify a token -- It ONLY VERIFIES WHAT'S BELOW
 apiRoutes.use(function(req, res, next) {
